@@ -17,6 +17,7 @@ SiteSafe is a deployable Next.js application for preliminary climate-exposure an
 - Responsive two-column report dashboard with dark mode, KPI summaries, projection range indicators, and an interactive ERA5-Land area chart.
 - Five-minute SWR caching for address and report requests, with fixed-size loading skeletons to prevent layout shift.
 - Device-local project saving and instant client-side impact scenario calculations with no server roundtrips.
+- Debounced address autocomplete with abbreviation/unit normalization, a Vicmap-first lookup, and a Victoria-bounded OpenStreetMap Nominatim fallback. Nominatim results retain attribution and are cached to respect its public usage policy.
 
 Flood evidence remains visibly **not assessed** because this build did not verify a single consistent, legally usable parcel-level source for all Victorian locations. Optional OpenAI wording and server-side caching are intentionally absent; the deterministic product requires no secrets.
 

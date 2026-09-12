@@ -1,0 +1,2 @@
+import {describe,expect,it} from 'vitest';import {normalizeAddress} from '@/lib/address';
+describe('address normalization',()=>{it('removes unit prefixes and expands common street types',()=>{expect(normalizeAddress('Unit 4/18 Vincent St, Daylesford VIC')).toBe('18 VINCENT STREET, DAYLESFORD')});it('normalizes road and avenue abbreviations without exact matching',()=>{expect(normalizeAddress('9 Beach Rd   Hampton')).toBe('9 BEACH ROAD HAMPTON');expect(normalizeAddress('12 Smith Ave')).toBe('12 SMITH AVENUE')})});

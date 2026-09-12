@@ -2,7 +2,7 @@ import { z } from 'zod';
 export const Fields = z.record(z.string(), z.union([z.string(), z.number().finite(), z.boolean(), z.null()]));
 export const Status = z.discriminatedUnion('status', [z.object({status:z.literal('success'),retrievedAt:z.string()}), ...(['not_covered','unavailable','invalid_response','timeout'] as const).map(status => z.object({status:z.literal(status),message:z.string()}))]);
 export type SourceStatus = z.infer<typeof Status>;
-export const Location = z.object({id:z.number().int().nonnegative(),address:z.string(),locality:z.string(),lga:z.string(),lat:z.number().min(-39.3).max(-33.9),lon:z.number().min(140.9).max(150.1),fields:Fields,retrievedAt:z.string()});
+export const Location = z.object({id:z.number().int(),address:z.string(),locality:z.string(),lga:z.string(),lat:z.number().min(-39.3).max(-33.9),lon:z.number().min(140.9).max(150.1),fields:Fields,retrievedAt:z.string()});
 export type SiteLocation = z.infer<typeof Location>;
 export const Use = z.enum(['home','renovation','development','farm','warehouse/commercial','general investment']);
 export const money = z.number().finite().min(0).max(1_000_000_000);
@@ -21,5 +21,5 @@ export const Finding = z.object({id:z.string(),category:z.enum(['bushfire','heat
 export const Report = z.object({id:z.string(),mode:z.enum(['live','demo']),savedAt:z.string(),location:Location,context:Context,sources:z.array(z.object({id:z.string(),name:z.string(),url:z.string(),status:Status})),bushfire:z.boolean().nullable(),history:History.nullable(),models:z.array(ModelChange),projections:z.array(Projection),findings:z.array(Finding)});
 export type SiteReport = z.infer<typeof Report>;
 export const SearchResponse = z.object({status:Status,matches:z.array(Location),truncated:z.boolean()});
-export const ReportRequest = z.object({locationId:z.number().int().nonnegative(),context:Context});
+export const ReportRequest = z.object({locationId:z.number().int(),location:Location.optional(),context:Context});
 export const defaultContext: DecisionContext = {use:'home',assetValue:600000,holdingYears:10,purchasePrice:null,concerns:['bushfire','heat']};
