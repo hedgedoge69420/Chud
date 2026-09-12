@@ -32,7 +32,7 @@ Live requests use an eight-second timeout, one safe retry, explicit result/field
 Requires Node.js 22 or newer.
 
 ```bash
-npm ci
+npm install
 npm run dev
 ```
 
