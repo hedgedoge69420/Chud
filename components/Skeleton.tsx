@@ -1,0 +1,2 @@
+export function Skeleton({className=''}:{className?:string}){return <div className={`skeleton ${className}`} aria-hidden="true"/>}
+export function ReportSkeleton(){return <div className="dashboard-loading" aria-label="Building report" aria-busy="true"><Skeleton className="skeleton-header"/><div className="kpi-grid">{[0,1,2,3].map(i=><Skeleton className="skeleton-kpi" key={i}/>)}</div><div className="dashboard-columns"><Skeleton className="skeleton-chart"/><Skeleton className="skeleton-panel"/></div></div>}
