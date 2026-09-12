@@ -1,0 +1,2 @@
+import {Investigator} from '@/components/investigator';
+export default function Investigate(){return <main><div className="page-head"><div className="eyebrow">Live evidence screen</div><h1>Investigate a<br/>Victorian property.</h1><p className="lead">Resolve a location, check mapped bushfire status, explore heat evidence and make data gaps visible.</p></div><div className="container"><Investigator/></div></main>}

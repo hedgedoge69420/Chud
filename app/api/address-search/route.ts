@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {z} from 'zod';import {searchAddress} from '@/lib/address';
+export async function GET(req:Request){const query=new URL(req.url).searchParams.get('q')??'';const parsed=z.string().trim().min(3).max(80).safeParse(query);if(!parsed.success)return NextResponse.json({error:'Enter at least 3 characters.'},{status:400});return NextResponse.json(await searchAddress(parsed.data));}

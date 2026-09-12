@@ -1,0 +1,4 @@
+import {z} from 'zod';
+import {money} from './schemas';
+export const ScenarioInput=z.object({assetValue:money,lowDamageRatio:z.number().finite().min(0).max(1),highDamageRatio:z.number().finite().min(0).max(1),interruptionDays:z.number().int().min(0).max(3650),interruptionCostPerDay:money}).refine(x=>x.lowDamageRatio<=x.highDamageRatio,'Low damage ratio must not exceed high damage ratio');
+export function calculateScenario(input:unknown){const x=ScenarioInput.parse(input);const directDamageLow=x.assetValue*x.lowDamageRatio,directDamageHigh=x.assetValue*x.highDamageRatio,interruptionCost=x.interruptionDays*x.interruptionCostPerDay;return {...x,directDamageLow,directDamageHigh,interruptionCost,totalLow:directDamageLow+interruptionCost,totalHigh:directDamageHigh+interruptionCost,disclaimer:'Illustrative impact scenario. User assumptions, not expected loss, an insurance quote or a prediction. No event probability is applied.'};}

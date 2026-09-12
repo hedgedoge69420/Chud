@@ -1,0 +1,13 @@
+import { z } from 'zod';
+import { Indicators, type AnnualHeat, type ModelHeat } from './schemas';
+export const Daily = z.object({time:z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),temperature_2m_max:z.array(z.number().finite().min(-100).max(80).nullable())}).refine(x=>x.time.length===x.temperature_2m_max.length,'Mismatched daily arrays');
+export function median(values:number[]):number { if(!values.length) throw new Error('No complete years'); const a=[...values].sort((a,b)=>a-b); return (a[Math.floor((a.length-1)/2)]+a[Math.floor(a.length/2)])/2; }
+export function heatIndicators(input:unknown,start:number,end:number) {
+ const daily=Daily.parse(input); const days=new Map<string,number|null>();
+ daily.time.forEach((date,i)=>{if(days.has(date)||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date) throw new Error('Invalid or duplicate date');days.set(date,daily.temperature_2m_max[i]);});
+ const annual:AnnualHeat[]=[];
+ for(let year=start;year<=end;year++){let complete=true,over35=0,over40=0,run=0,longest=0;for(let d=Date.UTC(year,0,1);d<Date.UTC(year+1,0,1);d+=86400000){const t=days.get(new Date(d).toISOString().slice(0,10));if(t==null){complete=false;run=0;continue;}if(t>35){over35++;run++;longest=Math.max(longest,run);}else run=0;if(t>40)over40++;}if(complete)annual.push({year,days_over_35:over35,days_over_40:over40,longest_run_over_35:longest});}
+ return {annual,retainedYears:annual.length,excludedYears:end-start+1-annual.length,medians:{days_over_35:median(annual.map(x=>x.days_over_35)),days_over_40:median(annual.map(x=>x.days_over_40)),longest_run_over_35:median(annual.map(x=>x.longest_run_over_35))}};
+}
+export function modelDifference(baseline:Record<typeof Indicators[number],number>,future:Record<typeof Indicators[number],number>){return {days_over_35:future.days_over_35-baseline.days_over_35,days_over_40:future.days_over_40-baseline.days_over_40,longest_run_over_35:future.longest_run_over_35-baseline.longest_run_over_35};}
+export function ensemble(models:ModelHeat[]){if(!models.length)return [];return Indicators.map(indicator=>{const values=models.map(m=>m.changes[indicator]);const mid=median(values),positive=values.filter(v=>v>0).length,negative=values.filter(v=>v<0).length;const direction: 'increasing'|'decreasing'|'unchanged'|'mixed'=positive&&negative?'mixed':positive?'increasing':negative?'decreasing':'unchanged';return {indicator,baselinePeriod:'1981-2010' as const,futurePeriod:'2021-2050' as const,medianChange:mid,minimumChange:Math.min(...values),maximumChange:Math.max(...values),agreementCount:values.filter(v=>Math.sign(v)===Math.sign(mid)).length,modelCount:values.length,modelsUsed:models.map(m=>m.model),unit:'days/year',direction};});}
