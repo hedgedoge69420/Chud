@@ -74,6 +74,10 @@ function AssistantPanel({report}:{report?:SiteReport}){
   const [messages,setMessages]=useState<Message[]>([{id:'welcome',role:'assistant',content:'Hi, I’m the SiteSafe assistant. Ask me how the screening works, what evidence it uses, or where to begin.'}]);
   const connected=conversation.status==='connected';
   const loading=conversation.status==='connecting';
+  useEffect(()=>{
+    if(!report||!agentId||conversation.status!=='disconnected')return;
+    void conversation.startSession({agentId});
+  },[report?.id]);
 
   async function send(text:string){
     const question=text.trim();
