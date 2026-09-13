@@ -24,6 +24,16 @@ const ChartArgs=z.object({
 type SiteReport=z.infer<typeof Report>;
 const encoder=new TextEncoder();
 const line=(value:unknown)=>encoder.encode(`${JSON.stringify(value)}\n`);
+const analystInstructions=`You are SiteSafe AI Copilot, an expert Australian environmental economist and climate-risk analyst supporting Victorian land decisions.
+
+Use only the validated property context, explicit user assumptions, calculated tool outputs, and approved adaptation catalogue. Label every material claim as observed evidence, model projection, user assumption, calculated scenario, regulatory possibility, or unresolved evidence gap. Never invent a probability, trend percentage, planning overlay, property devaluation, insurance premium, energy load, cost, or legal obligation. A Bushfire Prone Area intersection is not proof of a Bushfire Management Overlay; tell the user that the planning scheme and parcel controls must be checked.
+
+For analytical requests, use three concise sections:
+1. Financial exposure — explain the transparent loss scenario, DCF inputs needed for present-value analysis, potential devaluation and insurance premium drivers, and which values remain unknown. Use calculateExposure for arithmetic.
+2. Regulatory and legal checks — identify the exact Victorian instrument or assessment to verify, such as the applicable planning scheme, BMO status, planning permit triggers, BAL assessment, or council flood advice, and state what decision each check resolves.
+3. Mitigation ROI — rank only approved interventions, compare catalogue cost ranges with the exposed asset or scenario where valid, and state the avoided-loss, service-life, discount-rate, maintenance, and effectiveness inputs needed for a defensible ROI.
+
+Avoid generic advice. When evidence cannot support a number, name the missing variable and give a concrete method to obtain it instead of fabricating precision. Highlight hidden dependencies and conflicts across data, finance, regulation, and adaptation. Use renderChart automatically for historical-versus-projection or adaptation-cost comparisons. Keep conclusions decision-oriented and distinguish screening from engineering, insurance, valuation, and legal advice.`;
 
 function compact(report:SiteReport){
   return {
@@ -84,7 +94,7 @@ function fallback(message:string,report:SiteReport){
   const bushfire=report.bushfire===true
     ?'The Vicmap Bushfire Prone Area intersection means a site-specific BAL assessment should be prioritised.'
     :'No Vicmap intersection was returned; that does not establish low bushfire risk.';
-  return {text:`For ${report.location.address}, SiteSafe first resolves public evidence, then separates mapped exposure from climate-model change. ${bushfire} Flood evidence remains not assessed. Current approved next steps include ${actions.map(a=>a.name).join('; ')}. These are due-diligence prompts, not engineering, insurance or legal conclusions.`};
+  return {text:`## Financial exposure\nThe asset value in the current report is a user input, while event probability, devaluation, insurance premium change, and annual avoided loss are unresolved. A defensible DCF therefore needs an annual cash-flow change, holding period, discount rate, intervention life, and maintenance cost. Use the stress-test control to calculate transparent gross-impact scenarios without presenting them as expected loss.\n\n## Regulatory and legal checks\n${bushfire} Bushfire Prone Area status does not establish that a Bushfire Management Overlay applies. Check the parcel against its Victorian planning scheme, then commission a BAL assessment if the applicable controls or proposed works require it. Council flood advice remains a named evidence gap and should resolve whether parcel-level flood controls affect design or approval.\n\n## Mitigation ROI\nThe approved options for this report are ${actions.map(a=>`${a.name} (${a.low===null||a.high===null?'cost not established':`AUD ${a.low.toLocaleString('en-AU')}-${a.high.toLocaleString('en-AU')}`})`).join('; ')}. Rank them only after their service life, maintenance, effectiveness, and avoided-loss assumptions are documented. Compare those cash flows at the user-selected discount rate; do not treat catalogue cost as guaranteed asset protection.`};
 }
 
 export async function POST(request:Request){
@@ -112,7 +122,7 @@ export async function POST(request:Request){
           model:process.env.OPENAI_MODEL||'gpt-5',
           store:false,
           stream:true,
-          instructions:'You are SiteSafe AI Copilot, a concise climate due-diligence analyst. Use only supplied report facts and approved actions. Structure explanations through public data, financial exposure, required assessments, adaptation options, and decision implications. Never invent numbers, probabilities, risk ratings, insurance outcomes, legal conclusions, or new actions. State that missing evidence is not assessed. Use a function tool whenever a chart or calculation is requested.',
+          instructions:analystInstructions,
           input:`Validated property context:\n${JSON.stringify(compact(report))}\n\nConversation:\n${messages.map(message=>`${message.role}: ${message.content}`).join('\n')}`,
           tools:[
             {type:'function',name:'calculateExposure',description:'Calculate an illustrative impact scenario using the report asset value and explicit user assumptions.',strict:true,parameters:{type:'object',properties:{damageRatioLow:{type:'number',minimum:0,maximum:1},damageRatioHigh:{type:'number',minimum:0,maximum:1},interruptionDays:{type:'integer',minimum:0,maximum:3650},costPerDay:{type:'number',minimum:0,maximum:1000000}},required:['damageRatioLow','damageRatioHigh','interruptionDays','costPerDay'],additionalProperties:false}},
