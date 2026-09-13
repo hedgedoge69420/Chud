@@ -16,6 +16,7 @@ export function SiteSafeCopilot({report,assumptions}:{report:SiteReport;assumpti
   const abortRef=useRef<AbortController|null>(null),inputRef=useRef<HTMLTextAreaElement|null>(null);
   useEffect(()=>{const toggle=(event:KeyboardEvent)=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){event.preventDefault();setOpen(current=>!current)}if(event.key==='Escape')setOpen(false)};window.addEventListener('keydown',toggle);return()=>window.removeEventListener('keydown',toggle)},[]);
   useEffect(()=>{if(open)requestAnimationFrame(()=>inputRef.current?.focus())},[open]);
+  useEffect(()=>{void send('Using the selected property data, summarize the key climate risks and recommend three actionable next steps with evidence and cost ranges.');},[]);
   async function send(text:string){
     const question=text.trim();if(!question||loading)return;
     const user:CopilotMessage={id:crypto.randomUUID(),role:'user',content:question},assistantId=crypto.randomUUID(),next=[...messages,user];
