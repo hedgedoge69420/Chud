@@ -1,7 +1,7 @@
 'use client';
 import {FormEvent,useEffect,useRef,useState,type Dispatch,type SetStateAction} from 'react';
 import {ConversationProvider,useConversation} from '@elevenlabs/react';
-import {ArrowUp,Leaf,MessageCircle,Mic,MicOff,PanelRightClose,Sparkles} from 'lucide-react';
+import {ArrowUp,Leaf,MessageCircle,Mic,MicOff,PanelRightClose,Sparkles} from 'lucide-react';import type {SiteReport} from '@/lib/schemas';
 
 type Message={id:string;role:'user'|'assistant';content:string};
 const prompts=['What does SiteSafe check?','How do I investigate a property?','What evidence will I see?'];
@@ -48,15 +48,15 @@ function VoiceMic({agentId,open,messages,setMessages,stopVoiceRef}:{agentId:stri
   return <><button type="button" className={`home-assistant-mic ${connected?'active':''}`} onClick={()=>void toggleVoice()} disabled={!agentId||loading} aria-label={connected?'Stop voice conversation':'Start voice conversation'} title={connected?'Stop voice conversation':loading?'Connecting microphone':'Start voice conversation'}>{connected?<Mic size={17}/>:<MicOff size={17}/>}</button><span className="home-assistant-voice-status">{loading?'Connecting microphone...':connected?(conversation.isSpeaking?'Agent is speaking':'Listening for your voice'):'Use the microphone to talk to SiteSafe'}</span></>;
 }
 
-function AssistantPanel(){
-  const pendingMessageRef=useRef<string|null>(null);
+function AssistantPanel({report}:{report?:SiteReport}){
+  const pendingMessageRef=useRef<string|null>(report?'Summarize this selected property report and recommend actions using its evidence.':null);
   const sendUserMessageRef=useRef<((message:string)=>void)|null>(null);
   const sendContextualUpdateRef=useRef<((text:string)=>void)|null>(null);
   const stopVoiceRef=useRef<(() => void)|null>(null);
   const conversation=useConversation({
     textOnly:true,
     onConnect:()=>{
-      const context=conversationContext(messages);
+      const context=conversationContext(messages)+(report?'\\nSelected report: '+report.location.address+'; bushfire='+String(report.bushfire)+'; asset value AUD '+String(report.context.assetValue):'');
       if(context)sendContextualUpdateRef.current?.(`Conversation so far:\n${context}`);
       const pendingMessage=pendingMessageRef.current;
       pendingMessageRef.current=null;
@@ -83,7 +83,7 @@ function AssistantPanel(){
     setInput('');
     try{
       if(connected){
-        const context=conversationContext(messages);
+        const context=conversationContext(messages)+(report?'\\nSelected report: '+report.location.address+'; bushfire='+String(report.bushfire)+'; asset value AUD '+String(report.context.assetValue):'');
         if(context)conversation.sendContextualUpdate(`Conversation so far:\n${context}`);
         conversation.sendUserMessage(question);
       }else{
@@ -113,4 +113,4 @@ function AssistantPanel(){
   </>;
 }
 
-export function HomeSiteAssistant(){return <ConversationProvider><AssistantPanel/></ConversationProvider>}
+export function HomeSiteAssistant({report}:{report?:SiteReport}={}){return <ConversationProvider><AssistantPanel report={report}/></ConversationProvider>}
