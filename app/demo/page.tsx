@@ -1,2 +1,3 @@
-'use client';import {useState} from 'react';import {demoReports} from '@/lib/demo-data';import {ReportView} from '@/components/report-view';
-export default function Demo(){const [id,setId]=useState(demoReports[0].id),report=demoReports.find(r=>r.id===id)!;return <main><div className="demo-switcher"><span><b>Saved demo property</b><small>Switch reports without network calls</small></span>{demoReports.map(r=><button className={'button '+(r.id===id?'':'secondary')} key={r.id} onClick={()=>setId(r.id)}>{r.location.locality}</button>)}</div><ReportView report={report}/></main>}
+import {DemoClient} from '@/components/demo-client';import {pageMetadata} from '@/lib/page-metadata';
+export const metadata=pageMetadata('Demo report: 18 Vincent Street, Daylesford | SiteSafe','Explore a saved SiteSafe climate due-diligence report without making live data requests.');
+export default function Demo(){return <DemoClient/>}
